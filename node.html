@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script type="text/javascript">
+var ColorPicked = [150,0,0];
+var colors = ['#2d335b', '#535b2d', '#494949', '#d7d7d7', '9ad4ce']
+var ws = 0 ;
+var hs = 0 ;
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+function sendAjaxRequest(ldata, shift) {
+              $.ajax({
+                  type: "POST",
+                  contentType: "application/json",
+                  url:  "http://192.168.1.29/update" ,
+                  processData: false,
+                  data: JSON.stringify({ "pixels": ldata , "shift" : shift }),
+                  success:function(result){
+                  },
+                 error:function(result)
+                  {
+                  console.log(result);
+
+                 }
+             });
+    }
+
+function clickgest(event) {
+    $(event.data.element).css("background-color", "rgb("+ColorPicked[0]+","+ColorPicked[1]+","+ColorPicked[2]+")");
+    sendAjaxRequest(ColorPicked,event.data.shift) ;
+}
+
+
+
+function pickColor(element) {
+    colorval =  $(element.data.origin).css("background-color") ;
+    var parts = colorval.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    delete(parts[0]);
+    for (var i = 1; i <= 3; ++i) {
+        ColorPicked[i-1] = parseInt(parts[i]) ;
+    }
+    console.log(ColorPicked) ;
+}
+
+function paintAll(element) {
+    colorval =  $(element.data.origin).css("background-color") ;
+    var parts = colorval.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    delete(parts[0]);
+    for (var i = 1; i <= 3; ++i) {
+        ColorPicked[i-1] = parseInt(parts[i]) ;
+    }
+    console.log(ColorPicked) ;
+    pixs = ColorPicked ;
+    for (var i = 0 ; i < hs * ws ; i++) {
+         pixs = pixs.concat(ColorPicked)
+         $("#pixel_"+(i)).css("background-color", "rgb("+ColorPicked[0]+","+ColorPicked[1]+","+ColorPicked[2]+")");
+    }
+    sendAjaxRequest(pixs,0) ;
+
+}
+
+ $(document).ready(function(){
+
+
+          $.getJSON("http://192.168.1.29/pixels", function(jd) {
+             w = jd.width ;
+             h = jd.height ;
+             ws = w ;
+             hs = h ;
+             l = jd.pixels.length  ;
+             if (l == 3*w*h) {
+                console.log("Ok") ;
+                for (j = 0 ; j < w ; j++) {
+                    for (i=0 ; i<h ; i++) {
+                        var $lpixel = $( "<span class='pixel' id='pixel_"+(i*w+j)+"'> </span>" ) ;
+                        $( "#holdmap" ).append( $lpixel );
+                        str = "rgb("+jd.pixels[(i*w+j)*3]+","+jd.pixels[(i*w+j)*3+1]+","+jd.pixels[(i*w+j)*3+2]+")" ;
+                        console.log(str) ;
+                        $("#pixel_"+(i*w+j)).css("background-color", str);
+                        $("#pixel_"+(i*w+j)).click({  shift : (i*w+j), element : "#pixel_"+(i*w+j)} , clickgest);
+                    }
+                }
+             }
+          });
+
+          for (i=0;i<=16;i++) {
+            cl = getRandomColor() ;
+            $("#cp"+i).css("background-color", cl);
+
+            $("#cp"+i).click({ origin : "#cp"+i}, pickColor) ;
+            $("#cp"+i).dblclick({ origin : "#cp"+i}, paintAll) ;
+          }
+
+
+        });
+    </script>
+    <style type="text/css">
+div {
+    display: block;
+    clear:both ;
+}
+#holdmap {
+width : 320px;
+display:block;
+}
+.pixel {
+	float: left;
+	width: 40px;
+	height: 40px;
+}
+</style>
+</head>
+<body>
+
+<div>
+<span id="cp1" class="pixel" style="background-color: rgb(255, 0, 0);">.</span>
+<span id="cp2" class="pixel" style="background-color: rgb(0, 255, 0);">.</span>
+<span id="cp3" class="pixel" style="background-color: rgb(0, 0, 255);">.</span>
+    <span id="cp4" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+    <span id="cp5" class="pixel" style="background-color: #E24E42">.</span>
+    <span id="cp6" class="pixel" style="background-color: #E98000">.</span>
+    <span id="cp7" class="pixel" style="background-color: #EB6E80">.</span>
+    <span id="cp8" class="pixel" style="background-color: #008F95">.</span>
+    <span id="cp9" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+    <span id="cp10" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+<span id="cp11" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+    <span id="cp12" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+    <span id="cp13" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+    <span id="cp14" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+    <span id="cp15" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+    <span id="cp16" class="pixel" style="background-color: rgb(0, 0, 0);">.</span>
+</div>
+
+
+<div id="holdmap"></div>
+
+</body>
+</html>
